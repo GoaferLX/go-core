@@ -22,12 +22,14 @@ const (
 // use in production environments, as the user cannot forget to set them.
 // Values used are suggested values only, the user can and should adapt them according to the use-case.
 func NewServer(addr string, h http.Handler) *http.Server {
+	//logger, _ := log.ErrorLogger()
 	return &http.Server{
 		Addr:         addr,
 		Handler:      h,
 		ReadTimeout:  DefaultReadTimeout,
 		WriteTimeout: DefaultWriteTimeout,
 		IdleTimeout:  DefaultIdleTimeout,
+		//		ErrorLog:     logger,
 	}
 }
 
@@ -38,4 +40,12 @@ func NewClient() *http.Client {
 	return &http.Client{
 		Timeout: DefaultClientTimeout,
 	}
+}
+
+// NotFound wraps http.Error and sends a plain text error message with a http.StatusNotFound
+// code.  Acts exactly like http.NotFoundHandler() but sends a custom message.
+func NotFound() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, ErrNotFound.Error(), http.StatusNotFound)
+	})
 }
