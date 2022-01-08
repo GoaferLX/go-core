@@ -16,15 +16,15 @@ type HMAC struct {
 // NewHMAC creates a new object embedded with a HMAC hash.
 // It wraps the stdlib hmac.New() but removes the users obligation to provide a
 // func() that returns a hash.Hash as this handled by the constructor.
-func NewHMAC(key string) HMAC {
+func NewHMAC(key string) *HMAC {
 	h := hmac.New(sha256.New, []byte(key))
-	return HMAC{
+	return &HMAC{
 		hash: h,
 	}
 }
 
 // Hash is a helper function that will write the input to the hash and return the result as a string.
-func (h HMAC) Hash(input string) string {
+func (h *HMAC) Hash(input string) string {
 	h.hash.Reset()
 	h.hash.Write([]byte(input))
 	b := h.hash.Sum(nil)
