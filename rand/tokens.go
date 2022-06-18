@@ -37,8 +37,11 @@ func GenerateToken() (string, error) {
 	return RandomString(RememberTokenBytes)
 }
 
-// NumBytes returns the length of a strings underlying byte-slice.
+// NumBytes returns the length of a base64 encoded strings underlying byte-slice.
 func NumBytes(s string) int {
-	b := []byte(s)
-	return len(b)
+	bytes, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return len(bytes)
 }
