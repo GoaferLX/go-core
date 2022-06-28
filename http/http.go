@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 )
@@ -22,14 +23,12 @@ const (
 // use in production environments, as the user cannot forget to set them.
 // Values used are suggested values only, the user can and should adapt them according to the use-case.
 func NewServer(addr string, h http.Handler) *http.Server {
-	//logger, _ := log.ErrorLogger()
 	return &http.Server{
 		Addr:         addr,
-		Handler:      h,
+		Handler:      RecoverPanic(RateLimit(h)),
 		ReadTimeout:  DefaultReadTimeout,
 		WriteTimeout: DefaultWriteTimeout,
 		IdleTimeout:  DefaultIdleTimeout,
-		//		ErrorLog:     logger,
 	}
 }
 
@@ -42,10 +41,21 @@ func NewClient() *http.Client {
 	}
 }
 
-// NotFound wraps http.Error and sends a plain text error message with a http.StatusNotFound
-// code.  Acts exactly like http.NotFoundHandler() but sends a custom message.
-func NotFound() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, ErrNotFound.Error(), http.StatusNotFound)
-	})
+func RespondWithJSON(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	if e, ok := data.(error); ok {
+		if err := json.NewEncoder(w).Encode(e.Error()); err != nil {
+			// handle this error
+			// return included for compiler happiness but needs proper handling
+			return
+		}
+		return
+	}
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		// handle this error
+		// return included for compiler happiness but needs proper handling
+		return
+	}
+
 }
