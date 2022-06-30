@@ -23,13 +23,15 @@ const (
 // use in production environments, as the user cannot forget to set them.
 // Values used are suggested values only, the user can and should adapt them according to the use-case.
 func NewServer(addr string, h http.Handler) *http.Server {
+	clients := make(map[string]Allower)
 	return &http.Server{
 		Addr:         addr,
-		Handler:      RecoverPanic(RateLimit(h)),
+		Handler:      RecoverPanic(RateLimit(clients)(h)),
 		ReadTimeout:  DefaultReadTimeout,
 		WriteTimeout: DefaultWriteTimeout,
 		IdleTimeout:  DefaultIdleTimeout,
 	}
+
 }
 
 // NewClient returns a net/http Client with a pre-configured Timeout, making it safer to

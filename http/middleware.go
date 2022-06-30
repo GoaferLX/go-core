@@ -60,30 +60,37 @@ func LogRequest(next http.Handler) http.Handler {
 	})
 }
 
-// RateLimit will apply a request rate limiter based on the requests IP address.
-func RateLimit(next http.Handler) http.Handler {
-	var mu sync.Mutex
-	clients := make(map[string]*rate.Limiter)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		mu.Lock()
-		limiter, ok := clients[ip]
-		if !ok {
-			limiter = rate.NewLimiter(rateLimit, burstLimit)
-			clients[ip] = limiter
-		}
-		mu.Unlock()
-		if !limiter.Allow() {
-			w.WriteHeader(http.StatusTooManyRequests)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+type Allower interface {
+	Allow() bool
+}
 
+// RateLimit will apply a request rate limiter  on the requests IP address.
+func RateLimit(clients map[string]Allower) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		var mu sync.Mutex
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			mu.Lock()
+			limiter, ok := clients[ip]
+			if !ok {
+				limiter = rate.NewLimiter(rateLimit, burstLimit)
+				clients[ip] = limiter
+			}
+			mu.Unlock()
+
+			if !limiter.Allow() {
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // RecoverPanic will attempt to recover from any panics, log the reason for the panic and return
