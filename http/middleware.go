@@ -9,8 +9,8 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const rateLimit = 2
-const burstLimit = 4
+const DefaultRateLimit = 2
+const DefaultBurstLimit = 4
 
 // CheckContentHeader checks the incoming request Content-Type Header matches a user specified header before handling the request.
 // If false it sets a 415 MediaNotSupported return header and processing is stopped.
@@ -50,10 +50,10 @@ func CheckAcceptHeader(acceptType string) func(http.Handler) http.Handler {
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(log.Fields{
-			"remote":   r.RemoteAddr,
-			"protocol": r.Proto,
-			"method":   r.Method,
-			"URI":      r.RequestURI,
+			"remote_address": r.RemoteAddr,
+			"protocol":       r.Proto,
+			"method":         r.Method,
+			"URI":            r.RequestURI,
 		}).Info("HTTP request")
 
 		next.ServeHTTP(w, r)
@@ -64,10 +64,25 @@ type Allower interface {
 	Allow() bool
 }
 
-// RateLimit will apply a request rate limiter  on the requests IP address.
+// RateLimit will apply a request rate limiter based on the incoming requests IP address.
 func RateLimit(clients map[string]Allower) func(next http.Handler) http.Handler {
+	mw := RateLimiterMw{
+		limit:   DefaultRateLimit,
+		burst:   DefaultBurstLimit,
+		clients: clients,
+	}
+	return mw.RateLimit()
+}
+
+type RateLimiterMw struct {
+	limit   int
+	burst   int
+	clients map[string]Allower
+	mu      sync.Mutex
+}
+
+func (mw *RateLimiterMw) RateLimit() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		var mu sync.Mutex
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip, _, err := net.SplitHostPort(r.RemoteAddr)
 			if err != nil {
@@ -75,13 +90,13 @@ func RateLimit(clients map[string]Allower) func(next http.Handler) http.Handler 
 				return
 			}
 
-			mu.Lock()
-			limiter, ok := clients[ip]
+			mw.mu.Lock()
+			limiter, ok := mw.clients[ip]
 			if !ok {
-				limiter = rate.NewLimiter(rateLimit, burstLimit)
-				clients[ip] = limiter
+				limiter = rate.NewLimiter(rate.Limit(mw.limit), mw.burst)
+				mw.clients[ip] = limiter
 			}
-			mu.Unlock()
+			mw.mu.Unlock()
 
 			if !limiter.Allow() {
 				w.WriteHeader(http.StatusTooManyRequests)
