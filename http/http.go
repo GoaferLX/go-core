@@ -2,8 +2,11 @@ package http
 
 import (
 	"encoding/json"
+	"expvar"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 // The constants provided are defaults for net/http servers & clients.
@@ -24,9 +27,13 @@ const (
 // Values used are suggested values only, the user can and should adapt them according to the use-case.
 func NewServer(addr string, h http.Handler) *http.Server {
 	clients := make(map[string]Allower)
+	router := mux.NewRouter().StrictSlash(true)
+	router.Use(RecoverPanic, RateLimit(clients))
+	router.Handle("/metrics", expvar.Handler())
+	router.Handle("/", h)
 	return &http.Server{
 		Addr:         addr,
-		Handler:      RecoverPanic(RateLimit(clients)(h)),
+		Handler:      router,
 		ReadTimeout:  DefaultReadTimeout,
 		WriteTimeout: DefaultWriteTimeout,
 		IdleTimeout:  DefaultIdleTimeout,

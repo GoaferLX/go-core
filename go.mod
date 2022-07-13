@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/golang-migrate/migrate v3.5.4+incompatible
+	github.com/gorilla/mux v1.8.0
 	github.com/sirupsen/logrus v1.8.1
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 )
