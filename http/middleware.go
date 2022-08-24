@@ -67,16 +67,16 @@ type Allower interface {
 // RateLimit will apply a request rate limiter based on the incoming requests IP address.
 func RateLimit(clients map[string]Allower) func(next http.Handler) http.Handler {
 	mw := RateLimiterMw{
-		limit:   DefaultRateLimit,
-		burst:   DefaultBurstLimit,
+		Limit:   DefaultRateLimit,
+		Burst:   DefaultBurstLimit,
 		clients: clients,
 	}
 	return mw.RateLimit()
 }
 
 type RateLimiterMw struct {
-	limit   int
-	burst   int
+	Limit   int
+	Burst   int
 	clients map[string]Allower
 	mu      sync.Mutex
 }
@@ -93,7 +93,7 @@ func (mw *RateLimiterMw) RateLimit() func(next http.Handler) http.Handler {
 			mw.mu.Lock()
 			limiter, ok := mw.clients[ip]
 			if !ok {
-				limiter = rate.NewLimiter(rate.Limit(mw.limit), mw.burst)
+				limiter = rate.NewLimiter(rate.Limit(mw.Limit), mw.Burst)
 				mw.clients[ip] = limiter
 			}
 			mw.mu.Unlock()
