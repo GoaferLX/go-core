@@ -12,6 +12,7 @@ import (
 
 type DB struct {
 	*sql.DB
+	path string
 }
 
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
@@ -52,5 +53,5 @@ func Open(cfg Config) (*DB, error) {
 		"port":    cfg.Port,
 	}).Info("Connected to database")
 
-	return &DB{db}, nil
+	return &DB{DB: db}, nil
 }

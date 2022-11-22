@@ -10,7 +10,7 @@ import (
 )
 
 func (db *DB) MigrateUp() error {
-	m, err := db.migrator("file://../sql")
+	m, err := db.migrator(db.path)
 	if err != nil {
 		return fmt.Errorf("sql: creating migrator: %w", err)
 	}
@@ -22,7 +22,7 @@ func (db *DB) MigrateUp() error {
 }
 
 func (db *DB) MigrateDown() error {
-	m, err := db.migrator("file://../sql")
+	m, err := db.migrator(db.path)
 	if err != nil {
 		return fmt.Errorf("sql: creating migrator: %w", err)
 	}
@@ -35,7 +35,7 @@ func (db *DB) MigrateDown() error {
 }
 
 func (db *DB) DestructiveReset() error {
-	m, err := db.migrator("file://../sql")
+	m, err := db.migrator(db.path)
 	if err != nil {
 		return fmt.Errorf("sql: creating migrator: %w", err)
 	}
@@ -47,6 +47,14 @@ func (db *DB) DestructiveReset() error {
 		return fmt.Errorf("sql: migrating up: %w", err)
 	}
 	return nil
+}
+
+func (db *DB) SetMigrationPath(pathToMigrationFiles string) {
+	if pathToMigrationFiles == "" {
+		db.path = "file://../migrations"
+		return
+	}
+	db.path = pathToMigrationFiles
 }
 
 func (db *DB) migrator(filePath string) (*migrate.Migrate, error) {
