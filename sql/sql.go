@@ -21,7 +21,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 		return nil, err
 	}
 	return &Tx{
-		now: time.Now(),
+		now: time.Now().UTC(),
 		Tx:  tx,
 	}, nil
 }
