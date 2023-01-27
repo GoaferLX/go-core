@@ -54,3 +54,12 @@ func (l *logger) Log(msg interface{}) error {
 
 	return err
 }
+
+// SetOutput exists so that the log destination can be safely changed whilst being protected
+// by the mutex.  Originally this was not going to be included, as it seems YAGNI, however,
+// it was necessary for testing.
+func (l *logger) SetOutput(w io.Writer) {
+	l.mu.Lock()
+	l.writer = w
+	l.mu.Unlock()
+}
