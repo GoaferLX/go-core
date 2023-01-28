@@ -14,8 +14,8 @@ func TestRecoverPanic(t *testing.T) {
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
 		})
-
-		RecoverPanic(next).ServeHTTP(w, r)
+		srv := NewServer("", nil)
+		srv.RecoverPanic(next).ServeHTTP(w, r)
 		if got := w.Code; got != http.StatusCreated {
 			t.Errorf("expected status code %d, got %d", http.StatusOK, got)
 		}
@@ -28,8 +28,8 @@ func TestRecoverPanic(t *testing.T) {
 		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			panic("something happened")
 		})
-
-		RecoverPanic(next).ServeHTTP(w, r)
+		srv := NewServer("", nil)
+		srv.RecoverPanic(next).ServeHTTP(w, r)
 		if got := w.Code; got != http.StatusInternalServerError {
 			t.Errorf("expected status code %d, got %d", http.StatusOK, got)
 		}

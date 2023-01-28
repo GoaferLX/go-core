@@ -35,6 +35,10 @@ func New() *logger {
 	}
 }
 
+// DefaultLogger exposes a pre-configfured implementation of the Logger interface that can used when the caller does not require more fine grained control over
+// their logger instance.  Similar to the stdlib pattern.
+var DefaultLogger *logger = New()
+
 // Log will print the msg to the loggers writer. It prints key/value pairs in JSON format.
 func (l *logger) Log(msg interface{}) error {
 	entry := map[string]interface{}{

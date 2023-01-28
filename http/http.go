@@ -2,8 +2,11 @@ package http
 
 import (
 	"encoding/json"
+
 	"net/http"
 	"time"
+
+	"github.com/goaferlx/go-core/log"
 )
 
 // The constants provided are defaults for net/http servers & clients.
@@ -19,16 +22,30 @@ const (
 	DefaultClientTimeout time.Duration = 10 * time.Second
 )
 
+type Server struct {
+	*http.Server
+	log.Logger
+}
+
+func (s *Server) Log(msg interface{}) error {
+	if s.Logger == nil {
+		return log.DefaultLogger.Log(msg)
+	}
+	return s.Logger.Log(msg)
+}
+
 // NewServer returns a net/http Server with pre-configured Timeouts, making it safer to
 // use in production environments, as the user cannot forget to set them.
 // Values used are suggested values only, the user can and should adapt them according to the use-case.
-func NewServer(addr string, h http.Handler) *http.Server {
-	return &http.Server{
-		Addr:         addr,
-		Handler:      h,
-		ReadTimeout:  DefaultReadTimeout,
-		WriteTimeout: DefaultWriteTimeout,
-		IdleTimeout:  DefaultIdleTimeout,
+func NewServer(addr string, h http.Handler) *Server {
+	return &Server{
+		Server: &http.Server{
+			Addr:         addr,
+			Handler:      h,
+			ReadTimeout:  DefaultReadTimeout,
+			WriteTimeout: DefaultWriteTimeout,
+			IdleTimeout:  DefaultIdleTimeout,
+		},
 	}
 
 }

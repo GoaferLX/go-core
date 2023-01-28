@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/goaferlx/go-core/log"
 	"golang.org/x/time/rate"
 )
 
@@ -49,13 +48,13 @@ func CheckAcceptHeader(acceptType string) func(http.Handler) http.Handler {
 // LogRequest will log the basic info of an incoming request.
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.WithFields(log.Fields{
+		/*log.WithFields(log.Fields{
 			"remote_address": r.RemoteAddr,
 			"protocol":       r.Proto,
 			"method":         r.Method,
 			"URI":            r.RequestURI,
 		}).Info("HTTP request")
-
+		*/
 		next.ServeHTTP(w, r)
 	})
 }
@@ -110,11 +109,11 @@ func (mw *RateLimiterMw) RateLimit() func(next http.Handler) http.Handler {
 
 // RecoverPanic will attempt to recover from any panics, log the reason for the panic and return
 // an internal server error.  This middleware should be applied at the start of any middleware chains.
-func RecoverPanic(next http.Handler) http.Handler {
+func (s *Server) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.WithField("panic message", err).Error("routine paniced")
+				s.Log("panic recovered")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
