@@ -27,6 +27,8 @@ type Server struct {
 	log.Logger
 }
 
+// Log implements the log.Logger interface.  Logging will be passed to the servers logger if one is declared, otherwise handled
+// by the log package singleton.
 func (s *Server) Log(msg interface{}) error {
 	if s.Logger == nil {
 		return log.DefaultLogger.Log(msg)
@@ -34,7 +36,7 @@ func (s *Server) Log(msg interface{}) error {
 	return s.Logger.Log(msg)
 }
 
-// NewServer returns a net/http Server with pre-configured Timeouts, making it safer to
+// NewServer wraps and returns a net/http Server with pre-configured Timeouts, making it safer to
 // use in production environments, as the user cannot forget to set them.
 // Values used are suggested values only, the user can and should adapt them according to the use-case.
 func NewServer(addr string, h http.Handler) *Server {
@@ -59,6 +61,8 @@ func NewClient() *http.Client {
 	}
 }
 
+// RespondWithJSON is a convenience function to set headers and write a response with a single call.
+// If a response fails, the server panics.  It is good practice to wrap handlers in a recovery handler.
 func RespondWithJSON(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
