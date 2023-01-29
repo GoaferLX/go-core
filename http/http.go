@@ -29,11 +29,11 @@ type Server struct {
 
 // Log implements the log.Logger interface.  Logging will be passed to the servers logger if one is declared, otherwise handled
 // by the log package singleton.
-func (s *Server) Log(msg interface{}) error {
+func (s *Server) Log(msg interface{}, fields ...interface{}) error {
 	if s.Logger == nil {
-		return log.DefaultLogger.Log(msg)
+		return log.DefaultLogger.Log(msg, fields)
 	}
-	return s.Logger.Log(msg)
+	return s.Logger.Log(msg, fields)
 }
 
 // NewServer wraps and returns a net/http Server with pre-configured Timeouts, making it safer to
