@@ -18,7 +18,7 @@ import (
 // This reduces the API of a logger and its ability to affect an application once it is in use,
 // making its usage simpler to understand/use, whilst avoiding unintended side effects.
 type Logger interface {
-	Log(msg interface{}) error
+	Log(msg interface{}, fields ...interface{}) error
 }
 
 // logger is a very simple implementation of the  Logger interface.
@@ -40,10 +40,20 @@ func New() *logger {
 var DefaultLogger *logger = New()
 
 // Log will print the msg to the loggers writer. It prints key/value pairs in JSON format.
-func (l *logger) Log(msg interface{}) error {
+// Fields are key/value pairs that will be logged to provide additional ocntext.  If there is an odd number of pairs, they will be silently dropped.
+func (l *logger) Log(msg interface{}, fields ...interface{}) error {
 	entry := map[string]interface{}{
 		"msg":       msg,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	}
+	if len(fields)%2 == 0 {
+		for i := 0; i < len(fields); {
+			fieldName, ok := fields[i].(string)
+			if ok {
+				entry[fieldName] = fields[i+1]
+			}
+			i = i + 2
+		}
 	}
 
 	bytes, err := json.Marshal(entry)
