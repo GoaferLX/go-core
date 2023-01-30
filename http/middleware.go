@@ -8,8 +8,10 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const DefaultRateLimit = 2
-const DefaultBurstLimit = 4
+const (
+	DefaultRateLimit  = 2
+	DefaultBurstLimit = 4
+)
 
 // CheckContentHeader checks the incoming request Content-Type Header matches a user specified header before handling the request.
 // If false it sets a 415 MediaNotSupported return header and processing is stopped.

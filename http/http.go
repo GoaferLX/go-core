@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-
 	"net/http"
 	"time"
 
@@ -22,18 +21,26 @@ const (
 	DefaultClientTimeout time.Duration = 10 * time.Second
 )
 
+// DefaultShutdown is the maximum time a process should wait for a graceful server shutdown.  Should be used for context deadlines.
+const DefaultShutdownTimeout time.Duration = 10 * time.Second
+
 type Server struct {
 	*http.Server
 	log.Logger
+}
+
+func (s *Server) Start(errorChan chan error) {
+	s.Log("server listening", "port", s.Addr)
+	errorChan <- s.ListenAndServe()
 }
 
 // Log implements the log.Logger interface.  Logging will be passed to the servers logger if one is declared, otherwise handled
 // by the log package singleton.
 func (s *Server) Log(msg interface{}, fields ...interface{}) error {
 	if s.Logger == nil {
-		return log.DefaultLogger.Log(msg, fields)
+		return log.DefaultLogger.Log(msg, fields...)
 	}
-	return s.Logger.Log(msg, fields)
+	return s.Logger.Log(msg, fields...)
 }
 
 // NewServer wraps and returns a net/http Server with pre-configured Timeouts, making it safer to
