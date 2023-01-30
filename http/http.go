@@ -38,7 +38,7 @@ func (s *Server) Start(errorChan chan error) {
 
 // Log implements the log.Logger interface.  Logging will be passed to the servers logger if one is declared, otherwise handled
 // by the log package singleton.
-func (s *Server) Log(msg interface{}, fields ...interface{}) error {
+func (s *Server) Log(msg string, fields ...interface{}) error {
 	if s.Logger == nil {
 		return log.DefaultLogger.Log(msg, fields...)
 	}
