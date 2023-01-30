@@ -30,8 +30,10 @@ type Server struct {
 }
 
 func (s *Server) Start(errorChan chan error) {
-	s.Log("server listening", "port", s.Addr)
-	errorChan <- s.ListenAndServe()
+	s.Log("starting server", "port", s.Addr)
+	go func() {
+		errorChan <- s.ListenAndServe()
+	}()
 }
 
 // Log implements the log.Logger interface.  Logging will be passed to the servers logger if one is declared, otherwise handled
