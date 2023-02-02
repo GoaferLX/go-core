@@ -28,6 +28,8 @@ type logger struct {
 	mu     sync.Mutex //  mutex prevents concurrent writes to the output.
 }
 
+// New creates a new logger instance.
+// It assumes StdOut is the default location, may take this as an argument later.
 func New() *logger {
 	return &logger{
 		writer: os.Stdout,
@@ -76,4 +78,33 @@ func (l *logger) SetOutput(w io.Writer) {
 	l.mu.Lock()
 	l.writer = w
 	l.mu.Unlock()
+}
+
+// WithFields wraps a logger and holds a set of fields that should be logged on every call to Log.
+// It expects an even number of arguments, odd numbers are silently dropped.
+func WithFields(l Logger, fields ...interface{}) Logger {
+	if len(fields)%2 != 0 {
+		return l
+	}
+	return fieldLogger{
+		fields: fields,
+		Logger: l,
+	}
+}
+
+type fieldLogger struct {
+	fields []interface{}
+	Logger
+}
+
+// Log calls the underlying loggers Log method and passes any stored fields in addition
+// to the ones supplied.
+// Behvaiour of duplicate keys will vary on the underlying loggers behaviour.  Potentially
+// should do something to enforce a rule in future.
+func (f fieldLogger) Log(msg string, fields ...interface{}) error {
+	if len(fields)%2 != 0 {
+		return f.Logger.Log(msg, f.fields...)
+	}
+	fields = append(f.fields, fields...)
+	return f.Logger.Log(msg, fields...)
 }
