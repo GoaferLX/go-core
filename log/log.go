@@ -41,8 +41,8 @@ func New() *logger {
 // their logger instance.  Similar to the stdlib pattern.
 var DefaultLogger Logger = New()
 
-// Log will print the msg to the loggers writer. It prints key/value pairs in JSON format.
-// Fields are key/value pairs that will be logged to provide additional ocntext.  If there is an odd number of pairs, they will be silently dropped.
+// Log will print the msg to the loggers writer.
+// Fields are key/value pairs that will be logged to provide additional context.  If there is an odd number of pairs, they will be silently dropped.
 func (l *logger) Log(msg string, fields ...any) error {
 	entry := map[string]string{
 		"msg":       msg,
